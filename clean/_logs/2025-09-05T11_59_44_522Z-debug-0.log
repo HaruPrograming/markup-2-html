@@ -1,0 +1,35 @@
+0 verbose cli C:\Program Files\nodejs\node.exe C:\Users\Harut\AppData\Roaming\npm\node_modules\npm\bin\npm-cli.js
+1 info using npm@11.6.0
+2 info using node@v22.19.0
+3 silly config load:file:C:\Users\Harut\AppData\Roaming\npm\node_modules\npm\npmrc
+4 silly config load:file:C:\Users\Harut\haru-programing\markup-2-html\.npmrc
+5 silly config load:file:C:\Users\Harut\.npmrc
+6 silly config load:file:C:\Users\Harut\AppData\Roaming\npm\etc\npmrc
+7 verbose title npm create vite@latest frontend
+8 verbose argv "create" "vite@latest" "frontend"
+9 verbose logfile logs-max:10 dir:C:\Users\Harut\haru-programing\markup-2-html\clean\_logs\2025-09-05T11_59_44_522Z-
+10 verbose logfile C:\Users\Harut\haru-programing\markup-2-html\clean\_logs\2025-09-05T11_59_44_522Z-debug-0.log
+11 silly logfile done cleaning log files
+12 silly packumentCache heap:4345298944 maxSize:1086324736 maxEntrySize:543162368
+13 http fetch GET 200 https://registry.npmjs.org/create-vite 503ms (cache miss)
+14 silly packumentCache heap:4345298944 maxSize:1086324736 maxEntrySize:543162368
+15 http fetch GET 200 https://registry.npmjs.org/npm 580ms
+16 silly idealTree buildDeps
+17 silly fetch manifest create-vite@7.1.1
+18 silly packumentCache full:https://registry.npmjs.org/create-vite cache-miss
+19 http fetch GET 200 https://registry.npmjs.org/create-vite 92ms (cache miss)
+20 silly packumentCache full:https://registry.npmjs.org/create-vite set size:undefined disposed:false
+21 silly placeDep ROOT create-vite@7.1.1 OK for:  want: 7.1.1
+22 silly reify moves {}
+23 silly audit bulk request { 'create-vite': [ '7.1.1' ] }
+24 http cache create-vite@https://registry.npmjs.org/create-vite/-/create-vite-7.1.1.tgz 0ms (cache hit)
+25 silly tarball no local data for create-vite@https://registry.npmjs.org/create-vite/-/create-vite-7.1.1.tgz. Extracting by manifest.
+26 http fetch POST 200 https://registry.npmjs.org/-/npm/v1/security/advisories/bulk 199ms
+27 silly audit report {}
+28 http fetch GET 200 https://registry.npmjs.org/create-vite/-/create-vite-7.1.1.tgz 454ms (cache miss)
+29 verbose cwd C:\Users\Harut\haru-programing\markup-2-html
+30 verbose os Windows_NT 10.0.26100
+31 verbose node v22.19.0
+32 verbose npm  v11.6.0
+33 verbose exit 0
+34 info ok
