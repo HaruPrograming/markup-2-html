@@ -1,23 +1,27 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { marked } from "marked";
 import TurndownService from "turndown";
+import { fetchMarkdownItems } from "../api/api.js";
 
 const Top = () => {
   const [ markdownValue, setMarkdownValue ] = useState("");
   const [ htmlValue, setHtmlValue ] = useState("");
-  const [ showMenu, setShowMenu ] = useState(0);
+  const [showMenu, setShowMenu] = useState(0);
+  const [ rulesData, setRulesData ] = useState([""]);
 
-  const rules = [
-    { regex: /!!(.*?)!!/g, replace: "<span class='text-red-500'>$1</span>" },
-    { regex: /@@(.*?)@@/g, replace: "<span class='bg-yellow-300'>$1</span>" },
-    {
-      regex: /##(.*?)##/g,
-      replace: "<span class='text-blue-500 font-bold'>$1</span>",
-    },
-  ];
+  useEffect(() => {
+    fetchMarkdownItems().then((data) => {
+      // data が配列なら map して rulesData を配列に変換
+      const rules = data.map((item) => ({
+        regex: new RegExp(`${item.regex}(.*?)${item.regex}`, "g"),
+        replace: item.replace,
+      }));
+      setRulesData(rules);
+    });
+  }, []);
 
   const parseCustomMarkdown = (text) => {
-    return rules.reduce(
+    return rulesData.reduce(
       (acc, rule) => acc.replace(rule.regex, rule.replace),
       text
     );
@@ -46,15 +50,14 @@ const Top = () => {
 
   return (
     <>
-      <div id="layout" className="flex">
+      <div id="layout" className="flex w-screen">
         <div
           id="preview"
-          className="prose p-1 m-2 w-1/2 border-3 border-blue-600 rounded-sm"
+          className="prose p-1 m-2 w-screen border-3 border-blue-600 rounded-sm"
           style={styles.previewScreenHeight}
           dangerouslySetInnerHTML={{ __html: htmlValue }}
-        >
-        </div>
-        <div id="make_screen" className="w-1/2">
+        ></div>
+        <div id="make_screen" className="w-screen">
           <div id="make_header" className="flex">
             <h1 id="site_title" className="text-2xl">
               Convert
@@ -76,7 +79,7 @@ const Top = () => {
               />
               <input
                 type="button"
-                value={"カスタム"}
+                value={"custom"}
                 id="custom_markdown"
                 className={styles.headerContents}
                 onClick={() => setShowMenu(2)}
@@ -113,16 +116,37 @@ const Top = () => {
               />
             )}
             {showMenu == 2 && (
-              <textarea
-                type="text"
-                className="w-full h-full resize-none"
-                // value={htmlValue}
-                // onChange={(e) => {
-                //   setHtmlValue(e.target.value),
-                //     setMarkdownValue(HtmlToMarkdown(e.target.value));
-                // }}
-                placeholder="ここにcustomMarkdownを入力してください"
-              />
+              <>
+                {/* <textarea
+                  type="text"
+                  className="w-full h-full resize-none"
+                  // value={htmlValue}
+                  // onChange={(e) => {
+                  //   setHtmlValue(e.target.value),
+                  //     setMarkdownValue(HtmlToMarkown(e.target.value));
+                  // }}
+                  placeholder="ここにcustomMarkdownを入力してください"
+                /> */}
+                <table className="w-full">
+                  <thead>
+                    <tr>
+                      <th className="p-1">customMarkDown</th>
+                      <th className="p-1">htmlCode</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rulesData.map((rule, index) => (
+                      <tr key={index}>
+                        <td className="p-1 border-r-2">
+                          <input type="text" value={`${rule.regex}`} className="w-full" />
+                        </td>
+                        <td className="p-1"><input type="text" value={rule.replace} className="w-full" /></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <input type="submit" value={"保存"} className="py-1 px-2 m-1 float-end rounded-sm bg-amber-400" />
+              </>
             )}
           </div>
         </div>
