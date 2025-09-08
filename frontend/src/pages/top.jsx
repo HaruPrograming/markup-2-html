@@ -1,41 +1,115 @@
 import { useEffect, useState } from "react";
 import { marked } from "marked";
 import TurndownService from "turndown";
-import { fetchMarkdownItems } from "../api/api.js";
+// import DOMPurify from "dompurify";
+import {
+  fetchMarkdownItems,
+  CreateMarkdownItem, updateMarkdownItem,
+} from "../api/api.js";
 
 const Top = () => {
-  const [ markdownValue, setMarkdownValue ] = useState("");
-  const [ htmlValue, setHtmlValue ] = useState("");
+  const [markdownValue, setMarkdownValue] = useState();
+  const [htmlValue, setHtmlValue] = useState();
   const [showMenu, setShowMenu] = useState(0);
-  const [ rulesData, setRulesData ] = useState([""]);
+  const [rulesData, setRulesData] = useState([]);
+  const [inputValue, setInputValue] = useState([]);
+  const [newInputValue, setNewInputValue] = useState({ regex: "", replace: "" });
 
   useEffect(() => {
     fetchMarkdownItems().then((data) => {
-      // data が配列なら map して rulesData を配列に変換
       const rules = data.map((item) => ({
+        id: item.id,
         regex: new RegExp(`${item.regex}(.*?)${item.regex}`, "g"),
-        replace: item.replace,
+        replace: (item.replace).replace("><", ">$1<"),
       }));
       setRulesData(rules);
     });
   }, []);
+
+  useEffect(() => {
+    // inputValue も同じ形で初期化
+    fetchMarkdownItems().then((data) => {
+        const initInput = data.map((item) => ({
+          id: item.id,
+          regex: item.regex,
+          replace: item.replace,
+        }));
+      setInputValue(initInput);
+    });
+  }, [newInputValue]);
 
   const parseCustomMarkdown = (text) => {
     return rulesData.reduce(
       (acc, rule) => acc.replace(rule.regex, rule.replace),
       text
     );
-  }
+  };
 
   const MarkdownToHtml = (text) => {
     const html = parseCustomMarkdown(text);
     return marked(html);
-  }
+  };
 
   const HtmlToMarkdown = (html) => {
-    const turndownService = new TurndownService({headingStyle: "atx",});
+    const turndownService = new TurndownService({ headingStyle: "atx" });
     return turndownService.turndown(html);
-  }
+  };
+
+  const ChangeValue = (e, value, inputId) => {
+    setInputValue((prev) =>
+      prev.map((item) =>
+        item.id === inputId
+          ? value === "regex"
+            ? {
+                ...item,
+                id: inputId,
+                regex: e.target.value,
+              }
+            : {
+                ...item,
+                id: inputId,
+                replace: e.target.value,
+              }
+          : item
+      )
+    );
+  };
+
+  const CreateValue = (e, value) => {
+    setInputValue((prev) => [
+      ...prev,
+      value === "regex"
+        ? { id: prev.length + 1, regex: e.target.value, replace: "" }
+        : { id: prev.length + 1, regex: "", replace: e.target.value },
+    ]);
+  };
+
+  // SaveMarkdown 内の更新処理
+  const SaveMarkdown = () => {
+    if (newInputValue.regex && newInputValue.replace) {
+      CreateMarkdownItem(newInputValue)
+        .then(() => {
+          setInputValue((prev) => [
+            ...prev,
+            {
+              regex: newInputValue.regex,
+              replace: newInputValue.replace,
+            },
+          ]);
+          setNewInputValue({ regex: "", replace: "" }); // 追加後に入力フィールドをクリア
+        })
+        .catch((error) => {
+          console.error("Error creating item:", error);
+        });
+    }
+
+    inputValue.map((item) => {
+      updateMarkdownItem(item.id, {
+        regex: item.regex || "", // RegExp を文字列に変換
+        replace: item.replace || "",
+      });
+    });
+  };
 
   const styles = {
     previewScreenHeight: {
@@ -53,9 +127,10 @@ const Top = () => {
       <div id="layout" className="flex w-screen">
         <div
           id="preview"
-          className="prose p-1 m-2 w-screen border-3 border-blue-600 rounded-sm"
+          className="prose prose-h1:my-3 prose-h2:my-2 prose-h3:my-1 max-w-none w-3/4 p-1 m-2 border-3 border-blue-600 rounded-sm"
           style={styles.previewScreenHeight}
           dangerouslySetInnerHTML={{ __html: htmlValue }}
+          // dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(htmlValue) }}
         ></div>
         <div id="make_screen" className="w-screen">
           <div id="make_header" className="flex">
@@ -135,17 +210,62 @@ const Top = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {rulesData.map((rule, index) => (
-                      <tr key={index}>
+                    {inputValue.map((value) => (
+                      <tr>
                         <td className="p-1 border-r-2">
-                          <input type="text" value={`${rule.regex}`} className="w-full" />
+                          <input
+                            type="text"
+                            defaultValue={value.regex}
+                            onChange={(e) => {
+                              ChangeValue(e, "regex", value.id);
+                            }}
+                            className="w-full"
+                          />
                         </td>
-                        <td className="p-1"><input type="text" value={rule.replace} className="w-full" /></td>
+                        <td className="p-1">
+                          <input
+                            type="text"
+                            defaultValue={value.replace}
+                            className="w-full"
+                            onChange={(e) => {
+                              ChangeValue(e, "replace", value.id);
+                            }}
+                          />
+                        </td>
                       </tr>
                     ))}
+                    <tr>
+                      <td className="p-1 border-r-2">
+                        <input
+                          type="text"
+                          placeholder="新しいmarkdownを入力"
+                          value={newInputValue.regex}
+                          onChange={(e) => {
+                            setNewInputValue((prev) => ({ ...prev, regex: e.target.value }));
+                          }}
+                          className="w-full"
+                          />
+                      </td>
+                      <td className="p-1">
+                        <input
+                          type="text"
+                          placeholder="新しいhtmlを入力"
+                          value={newInputValue.replace}
+                          className="w-full"
+                          onChange={(e) => {
+                            setNewInputValue((prev) => ({ ...prev, replace: e.target.value }))  ;
+                          }}
+                        />
+                      </td>
+                    </tr>
                   </tbody>
                 </table>
-                <input type="submit" value={"保存"} className="py-1 px-2 m-1 float-end rounded-sm bg-amber-400" />
+                <input
+                  type="button"
+                  value={"保存"}
+                  className="py-1 px-2 m-1 float-end rounded-sm bg-amber-400"
+                  onClick={SaveMarkdown}
+                />
               </>
             )}
           </div>
